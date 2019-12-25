@@ -1,0 +1,61 @@
+
+two_cars.png
+format: RGBA8888
+filter: Nearest,Nearest
+repeat: none
+trophy
+  rotate: false
+  xy: 1, 456
+  size: 475, 561
+  orig: 475, 561
+  offset: 0, 0
+  index: -1
+play_up
+  rotate: false
+  xy: 1, 212
+  size: 243, 242
+  orig: 243, 242
+  offset: 0, 0
+  index: -1
+title
+  rotate: false
+  xy: 478, 730
+  size: 198, 287
+  orig: 198, 287
+  offset: 0, 0
+  index: -1
+play_down
+  rotate: false
+  xy: 1, 1
+  size: 210, 209
+  orig: 210, 209
+  offset: 0, 0
+  index: -1
+back_up
+  rotate: false
+  xy: 246, 306
+  size: 150, 148
+  orig: 150, 148
+  offset: 0, 0
+  index: -1
+back_down
+  rotate: false
+  xy: 478, 590
+  size: 140, 138
+  orig: 140, 138
+  offset: 0, 0
+  index: -1
+hs_up
+  rotate: false
+  xy: 678, 885
+  size: 132, 132
+  orig: 132, 132
+  offset: 0, 0
+  index: -1
+hs_down
+  rotate: false
+  xy: 478, 468
+  size: 120, 120
+  orig: 120, 120
+  offset: 0, 0
+  index: -1

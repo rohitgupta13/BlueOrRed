@@ -1,0 +1,164 @@
+
+twocars.png
+format: RGBA8888
+filter: Nearest,Nearest
+repeat: none
+window
+  rotate: false
+  xy: 1, 651
+  size: 717, 367
+  orig: 717, 367
+  offset: 0, 0
+  index: -1
+trophy
+  rotate: false
+  xy: 1, 88
+  size: 475, 561
+  orig: 475, 561
+  offset: 0, 0
+  index: -1
+play_up
+  rotate: false
+  xy: 720, 776
+  size: 243, 242
+  orig: 243, 242
+  offset: 0, 0
+  index: -1
+title
+  rotate: false
+  xy: 478, 362
+  size: 198, 287
+  orig: 198, 287
+  offset: 0, 0
+  index: -1
+play_down
+  rotate: false
+  xy: 478, 151
+  size: 210, 209
+  orig: 210, 209
+  offset: 0, 0
+  index: -1
+home_up
+  rotate: false
+  xy: 720, 584
+  size: 190, 190
+  orig: 190, 190
+  offset: 0, 0
+  index: -1
+resume_up
+  rotate: false
+  xy: 678, 392
+  size: 190, 190
+  orig: 190, 190
+  offset: 0, 0
+  index: -1
+home_down
+  rotate: false
+  xy: 690, 210
+  size: 180, 180
+  orig: 180, 180
+  offset: 0, 0
+  index: -1
+resume_down
+  rotate: false
+  xy: 690, 28
+  size: 180, 180
+  orig: 180, 180
+  offset: 0, 0
+  index: -1
+back_up
+  rotate: false
+  xy: 478, 1
+  size: 150, 148
+  orig: 150, 148
+  offset: 0, 0
+  index: -1
+back_down
+  rotate: false
+  xy: 870, 444
+  size: 140, 138
+  orig: 140, 138
+  offset: 0, 0
+  index: -1
+help_up
+  rotate: false
+  xy: 872, 310
+  size: 132, 132
+  orig: 132, 132
+  offset: 0, 0
+  index: -1
+hs_up
+  rotate: false
+  xy: 872, 176
+  size: 132, 132
+  orig: 132, 132
+  offset: 0, 0
+  index: -1
+mg_up
+  rotate: false
+  xy: 872, 42
+  size: 132, 132
+  orig: 132, 132
+  offset: 0, 0
+  index: -1
+pause_up
+  rotate: false
+  xy: 1, 25
+  size: 61, 61
+  orig: 61, 61
+  offset: 0, 0
+  index: -1
+pause_down
+  rotate: false
+  xy: 630, 99
+  size: 50, 50
+  orig: 50, 50
+  offset: 0, 0
+  index: -1
+cover
+  rotate: false
+  xy: 678, 648
+  size: 1, 1
+  orig: 1, 1
+  offset: 0, 0
+  index: -1
+
+twocars2.png
+format: RGBA8888
+filter: Nearest,Nearest
+repeat: none
+next_up
+  rotate: false
+  xy: 1, 123
+  size: 132, 132
+  orig: 132, 132
+  offset: 0, 0
+  index: -1
+help_down
+  rotate: false
+  xy: 1, 1
+  size: 120, 120
+  orig: 120, 120
+  offset: 0, 0
+  index: -1
+hs_down
+  rotate: false
+  xy: 123, 1
+  size: 120, 120
+  orig: 120, 120
+  offset: 0, 0
+  index: -1
+mg_down
+  rotate: false
+  xy: 135, 135
+  size: 120, 120
+  orig: 120, 120
+  offset: 0, 0
+  index: -1
+next_down
+  rotate: false
+  xy: 257, 135
+  size: 120, 120
+  orig: 120, 120
+  offset: 0, 0
+  index: -1
