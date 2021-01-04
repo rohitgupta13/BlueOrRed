@@ -30,15 +30,27 @@ public class Constants {
 	public static final float DOT_RIGHT_P1 = 687;
 	public static final float DOT_RIGHT_P2 = 909;
 	
-	public static final float FIRST_DOT = 2600;
-	public static final float VERTICAL_DISTANCE_BW_DOTS = 600;
+	public static final float FIRST_DOT = 3400;
+	public static final float VERTICAL_DISTANCE_BW_DOTS = 680;
 	
 	public static final float GROWING_RADIUS_SPEED = 2200;
 	
-	public static final String GAMEOVER_MSG = "TAP TO CONTINUE";
-	public static final String PREF_NAME = "com.blipthirteen.twocars";
+	public static final String GAMEOVER_MSG = "tap to continue";
+	public static final String PREF_NAME = "com.blipthirteen.twocars.pref";
 	public static final String GS_PACK = "gs.pack";
-	public static final String TEXTURE_PACK = "twocars.pack";
+	public static final String TEXTURE_PACK = "pack/twocars2.pack";
 	public static final String FONT = "RF.TTF";
-	
+
+	public static int bannerHeight = 0;
+	public static final String LEADERBOARD_ID = "CgkIvNrH1u4NEAIQBQ";
+	public static final String ACH_1 = "CgkIvNrH1u4NEAIQBg";
+	public static final String ACH_2 = "CgkIvNrH1u4NEAIQBw";
+	public static final String ACH_3 = "CgkIvNrH1u4NEAIQCA";
+	public static final String ACH_4 = "CgkIvNrH1u4NEAIQCQ";
+	public static final String ACH_5 = "CgkIvNrH1u4NEAIQCg";
+	public static final String ACH_6 = "CgkIvNrH1u4NEAIQCw";
+	public static final String ACH_7 = "CgkIvNrH1u4NEAIQDA";
+	public static final String ACH_8 = "CgkIvNrH1u4NEAIQDQ";
+	public static final String ACH_9 = "CgkIvNrH1u4NEAIQDg";
+	public static final String ACH_10 = "CgkIvNrH1u4NEAIQDw";
 }

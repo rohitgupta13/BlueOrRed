@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">Can you control two cars?</string>
+    <string name="app_name">Blue or Red?</string>
+    <string name="app_id">476386028860</string>
 
 </resources>

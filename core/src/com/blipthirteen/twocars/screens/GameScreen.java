@@ -12,6 +12,8 @@ import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.Preferences;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.audio.Music;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
@@ -27,19 +29,31 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
+
+
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.ui.ImageButton;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Timer;
 import com.badlogic.gdx.utils.Timer.Task;
 import com.badlogic.gdx.utils.viewport.FitViewport;
+import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.utils.viewport.StretchViewport;
+import com.blipthirteen.twocars.adhandler.AdHandler;
 import com.blipthirteen.twocars.misc.Constants;
 import com.blipthirteen.twocars.objects.Car;
 import com.blipthirteen.twocars.objects.Dot;
+import com.blipthirteen.twocars.tween.SpriteAccessor2;
+
+import aurelienribon.tweenengine.Tween;
+import aurelienribon.tweenengine.TweenManager;
+import de.golfgl.gdxgamesvcs.IGameServiceClient;
+import de.golfgl.gdxgamesvcs.leaderboard.IFetchLeaderBoardEntriesResponseListener;
+import de.golfgl.gdxgamesvcs.leaderboard.ILeaderBoardEntry;
 
 public class GameScreen implements Screen, InputProcessor{
 
@@ -48,7 +62,7 @@ public class GameScreen implements Screen, InputProcessor{
 		PAUSE,
 		OVER
 	}
-	
+
 	Preferences prefs;
 	GameState currentState;
 	
@@ -62,17 +76,25 @@ public class GameScreen implements Screen, InputProcessor{
 	
 	private Map<Integer, Float> positionMap;
 	private Map<Integer, Float> dotPositionMap;
-	
+	private Map<Integer, String> achMap;
+
+
 	private List<Dot> obstaclesLeft;
 	private List<Dot> obstaclesRight;
 	
 	private FitViewport fitViewport;
 	private StretchViewport stretchViewport;
+	private ScreenViewport screenViewport;
+
 	private Texture carRed, carBlue;
+
 	private Texture stripe, solidLine;
 	private Texture dotRed, dotBlue;
 	private Texture instructions;
-	
+	private Sprite toStartMessage;
+	private Texture roadBg, stretchTexture;
+
+
 	private Car carLeft, carRight;
 	private SpriteBatch batch;
 	
@@ -87,11 +109,11 @@ public class GameScreen implements Screen, InputProcessor{
 	
 	private float lastDotLeft, lastDotRight;
 	
-	private boolean drawBigAssCircle;
-	private String bigAssCircleColor;
-	private Vector2 bigAssCirclePosition;
+	private boolean drawBigCircle;
+	private String bigCircleColor;
+	private Vector2 bigCirclePosition;
 	private float growingRadius;
-	private Color blue, red, gray, currentColor;
+	private Color blue, red, gray;
 	
 	private boolean gameOver;
 	private boolean afterCircleHasBeenDrawn;
@@ -107,13 +129,46 @@ public class GameScreen implements Screen, InputProcessor{
 	private boolean switching, showSwitchingText, showSwitchingBackText, shouldSwitch, shouldUnswitch;
 	private boolean showInstructions;
 	private Sprite spriteSolid, spriteStripe;
-	
+	private Sprite warning, switchSprite, switchBackSprite;
+
 	// Gap in seconds
 	private float switchGap = 10;
 	private int randomMinimumScore;
-	
+
+	Sound sfx;
+	Music bgm;
+	private float bgmVolume;
+	private TweenManager tm;
+
+	private float screenRatio;
+	private IGameServiceClient gsClient;
+
+    private Timer timer;
+
+	private float verticalDistanceBetweenDots, carSpeedSideways;
+
+	public GameScreen(IGameServiceClient gsClient, AdHandler handler) {
+		this.handler = handler;
+		this.gsClient = gsClient;
+	}
+
+	private boolean musicEnabled, soundEnabled;
+	AdHandler handler;
+
+	private static int playCount = 0;
+
+
 	@Override
 	public void show() {
+		System.out.println("PlayingFor:" + playCount);
+		verticalDistanceBetweenDots = Constants.VERTICAL_DISTANCE_BW_DOTS;
+		carSpeedSideways = Constants.CAR_SPEED_SIDEWAYS;
+		handler.showAds(true);
+		screenRatio = ((float) Gdx.graphics.getHeight() / Gdx.graphics.getWidth());
+		prefs = Gdx.app.getPreferences("com.blipthirteen.twocars");
+		musicEnabled =  prefs.getBoolean("music");
+		soundEnabled =  prefs.getBoolean("sound");
+
 		showInstructions = true;
 		prefs = Gdx.app.getPreferences(Constants.PREF_NAME);
         currentState = GameState.RUNNING;
@@ -121,15 +176,15 @@ public class GameScreen implements Screen, InputProcessor{
 		red = new Color((float)199/255, (float)60/255, (float)66/255, 1);
 		blue = new Color((float)60/255, (float)66/255, (float)199/255, 1);
 		gray = new Color((float)19/255, (float)19/255, (float)19/255, 1);
-		currentColor = gray;
 		growingRadius = 0.01f;
 		roadYPos = 0;
-		scrollSpeed = 510;
+		scrollSpeed = 700;
 		lastDotLeft = Constants.FIRST_DOT;
 		lastDotRight = Constants.FIRST_DOT;
 		batch = new SpriteBatch();
 		loadTextures();
 		initViewports();
+
 		populateMaps();
 		shapeRenderer = new ShapeRenderer();
 		shapeRenderer.setAutoShapeType(true);
@@ -142,6 +197,48 @@ public class GameScreen implements Screen, InputProcessor{
 
 		Gdx.input.setCatchBackKey(true);
 		Gdx.input.setInputProcessor(multiplexer);
+
+		bgm = Gdx.audio.newMusic(Gdx.files.internal("audio/bgm.mp3"));
+		sfx = Gdx.audio.newSound(Gdx.files.internal("audio/sfx.wav"));
+
+		if(musicEnabled){
+			bgmVolume = 0.25f;
+		}else{
+			bgmVolume = 0;
+		}
+
+		bgm.setVolume(bgmVolume);
+		bgm.setLooping(true);
+		bgm.play();
+
+		toStartMessage.setPosition(Constants.WIDTH/2 - toStartMessage.getWidth()/2, Constants.HEIGHT/2 - toStartMessage.getHeight()/2);
+		warning.setScale(.25f);
+		warning.setPosition(Constants.WIDTH/2 - warning.getWidth()/2, Constants.HEIGHT/2 - warning.getHeight()/2 + 160);
+
+		switchSprite.setPosition(Constants.WIDTH/2 - switchSprite.getWidth()/2,  Constants.HEIGHT/2 - switchSprite.getHeight()/2 + 350);
+		switchBackSprite.setPosition(Constants.WIDTH/2 - switchBackSprite.getWidth()/2,  Constants.HEIGHT/2 - switchBackSprite.getHeight()/2 + 350);
+		tm = new TweenManager();
+		Tween.registerAccessor(Sprite.class,new SpriteAccessor2());
+		Tween.to(toStartMessage, SpriteAccessor2.SCALE_XY, .85f).target(1.2f,1.2f).repeatYoyo(-1,0).start(tm);
+		Tween.to(warning, SpriteAccessor2.SCALE_XY, .85f).target(.31f,.31f).repeatYoyo(-1,0).start(tm);
+		tm.update(Float.MIN_VALUE);
+		timer =  Timer.instance();
+		timer.schedule(new Task(){
+						   @Override
+						   public void run() {
+						   	   if(score % 10 == 0 || score % 65 == 0){
+									System.out.println("UPDATINGGPGS");
+						   	   		updateGpgs();
+						   	   		updateAchievements();
+								}
+							}
+					   }
+				, 0
+				, 5
+		);
+		if(!gsClient.isSessionActive()){
+			gsClient.logIn();
+		}
 	}
 	
 	private void initScene2D(){
@@ -166,7 +263,7 @@ public class GameScreen implements Screen, InputProcessor{
         overlay.setSize(Constants.WIDTH, Constants.HEIGHT);
         overlay.setVisible(false);
         
-        window = new Image(skin.getDrawable("window"));
+        window = new Image(skin.getDrawable("pause_window"));
         window.setPosition(Constants.WIDTH/2 - window.getWidth()/2, Constants.HEIGHT/2 - window.getHeight()/2);
         window.setVisible(false);
         stage.addActor(overlay);
@@ -176,21 +273,20 @@ public class GameScreen implements Screen, InputProcessor{
         stage.addActor(resumeButton);
         setButtonListeners();
 	}
-	
+
 	private void generateFont() {
-        FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal(Constants.FONT));
-        FreeTypeFontGenerator.FreeTypeFontParameter parameter = new FreeTypeFontGenerator.FreeTypeFontParameter();
-        parameter.size = 250;
-        hugeFont = generator.generateFont(parameter);
-        hugeFont.setColor(Color.WHITE);
-        parameter.size = 60;
-        font = generator.generateFont(parameter);
-        font.setColor(Color.WHITE);
-        parameter.size = 72;
-        smallFont = generator.generateFont(parameter);
-        smallFont.setColor(Color.WHITE);
-        generator.dispose();
-    }
+		FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal(Constants.FONT));
+		FreeTypeFontGenerator.FreeTypeFontParameter parameter = new FreeTypeFontGenerator.FreeTypeFontParameter();
+		parameter.size = 250;
+		hugeFont = generator.generateFont(parameter);
+		hugeFont.setColor(Color.WHITE);
+		parameter.size = 72;
+		smallFont = generator.generateFont(parameter);
+		smallFont.setColor(Color.WHITE);
+		parameter.size = 80;
+		font = generator.generateFont(parameter);
+		generator.dispose();
+	}
 	
 	private void init() {
 		switching = false;
@@ -210,68 +306,54 @@ public class GameScreen implements Screen, InputProcessor{
 		
 		obstaclesLeft = new ArrayList<Dot>();
 		obstaclesRight = new ArrayList<Dot>();
-		
-		//
-//		placeObstaclesLeft();
-//		placeObstaclesRight();
-		
+
 		carLeft = new Car("carLeft", Constants.CAR_LEFT_P1, 80, carRed);
 		carLeft.setSize(150, 279);
 		carRight = new Car("carRight", Constants.CAR_RIGHT_P1, 80, carBlue);
 		carRight.setSize(150, 279);
 		gameOver = false;
 		afterCircleHasBeenDrawn = false;
-		
-//		System.out.println("showSwitchingText :" + showSwitchingText + 
-//				"\nshowSwitchingBackText :" + showSwitchingBackText +
-//				"\nshouldSwitch :" + shouldSwitch + 
-//				"\nshouldUnswitch :" + shouldUnswitch +
-//				"\nrandomMinimumScore :" + randomMinimumScore 
-//				);
 	}
 	
 	@Override
 	public void render(float delta) {
-		Gdx.gl.glClearColor(currentColor.r, currentColor.g, currentColor.b, 1);
-        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-        
-        batch.setProjectionMatrix(stretchViewport.getCamera().combined);
-        stretchViewport.apply(true);
-        batch.begin();
-        batch.end();
+		Gdx.gl.glClearColor(0,1,0, 1);
+		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+
+		screenRatio = ((float) Gdx.graphics.getHeight() / Gdx.graphics.getWidth());
+		System.out.println("GDX-Height " + Gdx.graphics.getHeight());
+		System.out.println("GDX-Width " + Gdx.graphics.getWidth());
+		System.out.println("GDX-Ratio " +  ((float) Gdx.graphics.getHeight() / Gdx.graphics.getWidth()));
+
+		System.out.println("Volume" + bgmVolume);
+		if(bgmVolume < 0.20f){
+			bgm.stop();
+		}
+
+		batch.setProjectionMatrix(stretchViewport.getCamera().combined);
+		stretchViewport.apply(true);
+		batch.begin();
+
+		batch.draw(roadBg, 0, 0 , Constants.WIDTH, Constants.HEIGHT);
+		spriteSolid.setPosition(40 - solidLine.getWidth()/2, 0);
+		spriteSolid.draw(batch);
+		spriteSolid.setPosition(1080 - 40 - solidLine.getWidth()/2, 0);
+		spriteSolid.draw(batch);
+		// Striped lines through the centre
+		spriteStripe.setPosition(540 - stripe.getWidth()/2, roadYPos);
+		spriteStripe.draw(batch);
+		spriteStripe.setPosition(540 - stripe.getWidth()/2, roadYPos + stripe.getHeight());
+		spriteStripe.draw(batch);
+		spriteStripe.setPosition(540 - stripe.getWidth()/2, roadYPos + stripe.getHeight() * 2);
+		spriteStripe.draw(batch);
+		batch.end();
 //        drawDebug();
         
 		
 		batch.setProjectionMatrix(fitViewport.getCamera().combined);
         fitViewport.apply(true);
         batch.begin();
-        
-        // Draw a line on the left side
-        spriteSolid.setPosition(40 - solidLine.getWidth()/2, 0);
-//        sprite.setColor(Color.GREEN);
-        spriteSolid.draw(batch);
-        spriteSolid.setPosition(1080 - 40 - solidLine.getWidth()/2, 0);
-        spriteSolid.draw(batch);
-        //batch.draw(solidLine, 40 - solidLine.getWidth()/2, 0, solidLine.getWidth(), solidLine.getHeight());
-        
-//        batch.draw(solidLine, 40 - solidLine.getWidth()/2, 0, solidLine.getWidth(), solidLine.getHeight());
-        // Draw a line on the right side
-//        batch.draw(solidLine, 1080 - 40 - solidLine.getWidth()/2, 0, solidLine.getWidth(), solidLine.getHeight());
-        
-        // Striped lines through the centre
-        
-    	  spriteStripe.setPosition(540 - stripe.getWidth()/2, roadYPos);
-    	  spriteStripe.draw(batch);
-    	  spriteStripe.setPosition(540 - stripe.getWidth()/2, roadYPos + stripe.getHeight());
-    	  spriteStripe.draw(batch);
-    	  spriteStripe.setPosition(540 - stripe.getWidth()/2, roadYPos + stripe.getHeight() * 2);
-    	  spriteStripe.draw(batch);
-        
-//        batch.draw(stripe, 540 - stripe.getWidth()/2, roadYPos, stripe.getWidth(), stripe.getHeight());
-//        batch.draw(stripe, 540 - stripe.getWidth()/2, roadYPos + stripe.getHeight(), stripe.getWidth(), stripe.getHeight());
-//        batch.draw(stripe, 540 - stripe.getWidth()/2, roadYPos + stripe.getHeight() * 2, stripe.getWidth(), stripe.getHeight());
-        
-        
+
 		for (Dot dot : obstaclesLeft) {
 			if (dot.isDraw()) {
 				dot.draw(batch);
@@ -283,60 +365,91 @@ public class GameScreen implements Screen, InputProcessor{
 				dot.draw(batch);
 			}
 		}
-        
+
+		System.out.println("Screen Y"  + fitViewport.getScreenY());
+		System.out.println("Top Gutter"  + fitViewport.getTopGutterHeight());
+		fitViewport.setScreenY(fitViewport.getScreenY() - fitViewport.getBottomGutterHeight());
+
         carLeft.draw(batch);
         carRight.draw(batch);
+
         if(showInstructions) {
-        	batch.draw(instructions, Constants.WIDTH/2 - instructions.getWidth()/2, Constants.HEIGHT/2 -200 - instructions.getHeight()/2);
-        }
-        	
+			batch.draw(instructions, Constants.WIDTH/2 - instructions.getWidth()/2, Constants.HEIGHT/2 -400 - instructions.getHeight()/2);
+			toStartMessage.draw(batch);
+		}
+        tm.update(delta);
 
         GlyphLayout glyphLayout = new GlyphLayout();
         String scoreText = "" + score;
         glyphLayout.setText(font, scoreText);
         float textWidth = glyphLayout.width;
-        
-        font.draw(batch, scoreText, Constants.WIDTH - 82 - textWidth, 1890);
-        batch.end();
 
-        
+        if(screenRatio < 2){
+			font.draw(batch, scoreText, Constants.WIDTH - 82 - textWidth, 1890 - Constants.bannerHeight);
+			pauseButton.setPosition(80, Constants.HEIGHT - 82 - Constants.bannerHeight - 15);
+		}else{
+			font.draw(batch, scoreText, Constants.WIDTH - 82 - textWidth, 1890);
+			pauseButton.setPosition(80, Constants.HEIGHT - 82 - 15);
+		}
+
+		if(shouldUnswitch){
+			warning.draw(batch);
+		}
+
+		font.draw(batch, "" + screenRatio, Constants.WIDTH/2, Constants.HEIGHT/2+300);
+		font.draw(batch,  "" + Constants.bannerHeight, Constants.WIDTH/2, Constants.HEIGHT/2+500);
+
+		batch.end();
+
         stage.act();
         stage.draw();
         
 		switch(currentState) {
 		case RUNNING:
+			System.out.println("bgmVolume= " + bgmVolume);
+			if(musicEnabled){
+				if(bgmVolume < 1){
+					bgmVolume += 0.0010f;
+				}
+				if(bgmVolume > 1){
+					bgmVolume = 1;
+				}
+				bgm.setVolume(bgmVolume);
+			}
 			update(delta);
 			break;
 		case PAUSE:
 			break;
 		case OVER:
-			if(drawBigAssCircle) {
-	        	drawBigAssCircle();
+			if(drawBigCircle) {
+				drawBigCircle();
 	        	if(!afterCircleHasBeenDrawn){
 	        		growingRadius += Constants.GROWING_RADIUS_SPEED * delta;
+
+					bgm.setVolume(bgmVolume);
+	        		if(bgmVolume > 0){
+						bgmVolume -= delta;
+					}
 	        	}
 	        }
 	        
 	        if(growingRadius > Constants.HEIGHT + 300) {
-	        	afterCircleHasBeenDrawn = true;
+				afterCircleHasBeenDrawn = true;
 	        	batch.setProjectionMatrix(fitViewport.getCamera().combined);
 	            fitViewport.apply(true);
 	            batch.begin();
 
 	            // For centering text
-	            
 	            String item = "" + score;
 	            glyphLayout.setText(hugeFont,item);
 	            float w = glyphLayout.width;
-	            hugeFont.draw(batch, item, Constants.WIDTH/2 - w/2, 1140);
+				hugeFont.draw(batch, item, Constants.WIDTH/2 - w/2, 1140);
 
 	            glyphLayout.setText(smallFont, Constants.GAMEOVER_MSG);
 	            w = glyphLayout.width; 
 	            smallFont.draw(batch, Constants.GAMEOVER_MSG, Constants.WIDTH/2 - w/2, 900);
 	            batch.end();
-	        	
-//	        	Game game = (Game) Gdx.app.getApplicationListener();
-//	        	game.setScreen(new GameScreen());
+
 	        }
 			break;
 		}
@@ -399,14 +512,16 @@ public class GameScreen implements Screen, InputProcessor{
 
 		batch.begin();
 		if (showSwitchingText) {
-			font.draw(batch, "SWITCH!", 455, 960);
+			warning.draw(batch);
+			switchSprite.draw(batch);
 			showTime += delta;
 		}
 
 		if (showSwitchingBackText) {
-			font.draw(batch, "SWITCH BACK!", 370, 960);
+			switchBackSprite.draw(batch);
 			showTime += delta;
 		}
+
 		batch.end();
 		
 		controls(delta);
@@ -451,25 +566,38 @@ public class GameScreen implements Screen, InputProcessor{
 		carLeftUnsafeColor = "red";
 		carRightUnsafeColor = "blue";
 	}
-	
+
+
 	private void updateSpeed() {
-		if(score > 8 && score < 16) {
-			scrollSpeed = 570;
+		if(score > 10 && score < 20) {
+			scrollSpeed = 700 + 80;
+			verticalDistanceBetweenDots = Constants.VERTICAL_DISTANCE_BW_DOTS + 80;
+			carSpeedSideways = Constants.CAR_SPEED_SIDEWAYS + 15;
 		}
-		if(score >= 16 && score < 24) {
-			scrollSpeed = 640;
+		if(score >= 20 && score < 30) {
+			scrollSpeed = 700 + 160;
+			verticalDistanceBetweenDots = Constants.VERTICAL_DISTANCE_BW_DOTS + 160;
+			carSpeedSideways = Constants.CAR_SPEED_SIDEWAYS + 30;
 		}
-		if(score >= 24 && score < 32) {
-			scrollSpeed = 710;
+		if(score >= 30 && score < 40) {
+			scrollSpeed = 700 + 240;
+			verticalDistanceBetweenDots = Constants.VERTICAL_DISTANCE_BW_DOTS + 240;
+			carSpeedSideways = Constants.CAR_SPEED_SIDEWAYS + 45;
 		}
-		if(score >= 32 && score < 40) {
-			scrollSpeed = 780;
+		if(score >= 40 && score < 50) {
+			scrollSpeed = 700 + 320;
+			verticalDistanceBetweenDots = Constants.VERTICAL_DISTANCE_BW_DOTS + 320;
+			carSpeedSideways = Constants.CAR_SPEED_SIDEWAYS + 60;
 		}
-		if(score >= 40 && score <50) {
-			scrollSpeed = 850;
+		if(score >= 50 && score <60) {
+			scrollSpeed = 700 + 400;
+			verticalDistanceBetweenDots = Constants.VERTICAL_DISTANCE_BW_DOTS + 400;
+			carSpeedSideways = Constants.CAR_SPEED_SIDEWAYS + 75;
 		}
-		if(score >= 50) {
-			scrollSpeed = 900;
+		if(score >= 60) {
+			scrollSpeed = 700 + 480;
+			verticalDistanceBetweenDots = Constants.VERTICAL_DISTANCE_BW_DOTS + 420;
+			carSpeedSideways = Constants.CAR_SPEED_SIDEWAYS + 90;
 		}
 	}
 	
@@ -477,10 +605,16 @@ public class GameScreen implements Screen, InputProcessor{
 	public void resize(int width, int height) {
 		fitViewport.update(width,height,true);
 		stretchViewport.update(width,height,true);
+		screenViewport.update(width,height,true);
 	}
 
 	@Override
 	public void pause() {
+
+	}
+
+	private void customPause(){
+		bgm.pause();
 		pauseButton.setVisible(false);
 		window.setVisible(true);
 		overlay.setVisible(true);
@@ -489,8 +623,8 @@ public class GameScreen implements Screen, InputProcessor{
 		currentState = GameState.PAUSE;
 	}
 
-	@Override
-	public void resume() {
+	private void customResume(){
+		bgm.play();
 		pauseButton.setVisible(true);
 		window.setVisible(false);
 		overlay.setVisible(false);
@@ -500,7 +634,13 @@ public class GameScreen implements Screen, InputProcessor{
 	}
 
 	@Override
+	public void resume() {
+
+	}
+
+	@Override
 	public void hide() {
+
 	}
 
 	@Override
@@ -514,6 +654,12 @@ public class GameScreen implements Screen, InputProcessor{
 		dotRed.dispose();
 		dotBlue.dispose();
 		instructions.dispose();
+		toStartMessage.getTexture().dispose();
+		warning.getTexture().dispose();
+		switchSprite.getTexture().dispose();
+		switchBackSprite.getTexture().dispose();
+		roadBg.dispose();
+		stretchTexture.dispose();
 	}
 	
 	private void clearObstacles() {
@@ -549,6 +695,9 @@ public class GameScreen implements Screen, InputProcessor{
 					gameover(dot, "blue");
 				}else {
 					if(dot.isDraw()) {
+						if(soundEnabled){
+							sfx.play();
+						}
 						score++;
 						dot.setDraw(false);
 					}
@@ -561,6 +710,9 @@ public class GameScreen implements Screen, InputProcessor{
 					gameover(dot, "red");
 				}else {
 					if(dot.isDraw()) {
+						if(soundEnabled){
+							sfx.play();
+						}
 						score++;
 						dot.setDraw(false);
 					}
@@ -570,33 +722,74 @@ public class GameScreen implements Screen, InputProcessor{
 	}
 	
 	private void gameover(Dot dot, String color) {
-		currentState = GameState.OVER;
+        currentState = GameState.OVER;
 		gameOver = true;
-		bigAssCirclePosition = dot.getPosition();
-		drawBigAssCircle = true;
-		bigAssCircleColor = color;
+		bigCirclePosition = dot.getPosition();
+		drawBigCircle = true;
+		bigCircleColor = color;
 		pauseButton.setVisible(false);
 		resumeButton.setVisible(false);
-		
-		int highScore = prefs.getInteger("highScore");
-		if(score > highScore) {
-			prefs.putInteger("highScore", score);
-			prefs.flush();
+
+		//If not logged in, login
+		if(!gsClient.isSessionActive()){
+			gsClient.logIn();
+		}
+		timer.clear();
+		updateGpgs();
+		updateAchievements();
+	}
+
+	private void updateGpgs(){
+		// Check to see if a previous score exists
+		gsClient.fetchLeaderboardEntries(Constants.LEADERBOARD_ID, 1, true, new IFetchLeaderBoardEntriesResponseListener() {
+			@Override
+			public void onLeaderBoardResponse(Array<ILeaderBoardEntry> leaderBoard) {
+				try {
+					// If current player has existing score
+					if(leaderBoard.get(0).isCurrentPlayer()){
+						int leaderboardScore = Integer.parseInt(leaderBoard.get(0).getFormattedValue());
+						if(leaderboardScore >= score){
+							System.out.println("ScoreInfo: Leaderboard score higher than current score:" + leaderboardScore);
+						}
+						else if(leaderboardScore < score){
+							System.out.println("ScoreInfo: Leaderboard score lower than current score"+ score);
+							gsClient.logIn();
+							gsClient.submitToLeaderboard(Constants.LEADERBOARD_ID, score, null);
+						}
+					}
+					else{
+						System.out.println("ScoreInfo: No previous score found"+ score);
+						gsClient.logIn();
+						gsClient.submitToLeaderboard(Constants.LEADERBOARD_ID, score, null);
+					}
+				}catch(Exception e){
+
+				}
+			}
+		});
+	}
+
+	private void updateAchievements(){
+		for (Map.Entry<Integer, String> entry : achMap.entrySet()) {
+			if(entry.getKey() <= score){
+				System.out.println("Unlocking " +  entry.getValue());
+				gsClient.unlockAchievement(entry.getValue());
+			}
 		}
 	}
 	
-	private void drawBigAssCircle() {
-		shapeRenderer.setProjectionMatrix(fitViewport.getCamera().combined);
-        fitViewport.apply(true);
+	private void drawBigCircle() {
+		shapeRenderer.setProjectionMatrix(stretchViewport.getCamera().combined);
+		stretchViewport.apply(true);
         shapeRenderer.begin();
         shapeRenderer.set(ShapeType.Filled);
-        if(bigAssCircleColor.equals("red")) {
+        if(bigCircleColor.equals("red")) {
         	shapeRenderer.setColor(red);
         }else {
         	shapeRenderer.setColor(blue);
         }
         
-        shapeRenderer.circle(bigAssCirclePosition.x, bigAssCirclePosition.y, growingRadius);
+        shapeRenderer.circle(bigCirclePosition.x, bigCirclePosition.y, growingRadius);
     	shapeRenderer.end();
 	}
 	
@@ -629,6 +822,18 @@ public class GameScreen implements Screen, InputProcessor{
 		dotPositionMap.put(1, Constants.DOT_LEFT_P2);
 		dotPositionMap.put(2, Constants.DOT_RIGHT_P1);
 		dotPositionMap.put(3, Constants.DOT_RIGHT_P2);
+
+		achMap = new HashMap<>();
+		achMap.put(0, Constants.ACH_1);
+		achMap.put(10, Constants.ACH_2);
+		achMap.put(20, Constants.ACH_3);
+		achMap.put(30, Constants.ACH_4);
+		achMap.put(40, Constants.ACH_5);
+		achMap.put(50, Constants.ACH_6);
+		achMap.put(65, Constants.ACH_7);
+		achMap.put(80, Constants.ACH_8);
+		achMap.put(90, Constants.ACH_9);
+		achMap.put(100, Constants.ACH_10);
 	}
 	
 	private void placeObstaclesLeft() {
@@ -640,7 +845,7 @@ public class GameScreen implements Screen, InputProcessor{
 			obstaclesLeft.add(dot);
 			float randomInt = MathUtils.random(1, 3);
 			float randomFloat =  MathUtils.random(1f, randomInt);
-			lastDotLeft += Constants.VERTICAL_DISTANCE_BW_DOTS * randomFloat;
+			lastDotLeft += verticalDistanceBetweenDots * randomFloat;
 		}
 	}
 	
@@ -669,7 +874,7 @@ public class GameScreen implements Screen, InputProcessor{
 			obstaclesRight.add(dot);
 			float randomInt = MathUtils.random(1, 3);
 			float randomFloat =  MathUtils.random(1f, randomInt);
-			lastDotRight += Constants.VERTICAL_DISTANCE_BW_DOTS * randomFloat;
+			lastDotRight += verticalDistanceBetweenDots * randomFloat;
 		}
 	}
 	
@@ -710,12 +915,12 @@ public class GameScreen implements Screen, InputProcessor{
 	private void controls(float delta) {
 		if(Gdx.input.isKeyJustPressed(Keys.A) && !moveLeftCar) {
 			if(carLeft.getXPosition() == Constants.CAR_LEFT_P1) {
-				leftCarSpeed = Constants.CAR_SPEED_SIDEWAYS;
+				leftCarSpeed = carSpeedSideways;
 				moveLeftCar = true;
 				carLeft.setTargetPositionX(Constants.CAR_LEFT_P2);
 				carLeft.getSprite().setRotation(-10);
 			}else {
-				leftCarSpeed = -Constants.CAR_SPEED_SIDEWAYS;
+				leftCarSpeed = -carSpeedSideways;
 				moveLeftCar = true;
 				carLeft.setTargetPositionX(Constants.CAR_LEFT_P1);
 				carLeft.getSprite().setRotation(10);
@@ -724,12 +929,12 @@ public class GameScreen implements Screen, InputProcessor{
 		
 		if(Gdx.input.isKeyJustPressed(Keys.D) && !moveRightCar) {
 			if(carRight.getXPosition() == Constants.CAR_RIGHT_P1) {
-				rightCarSpeed = Constants.CAR_SPEED_SIDEWAYS;
+				rightCarSpeed = carSpeedSideways;
 				moveRightCar = true;
 				carRight.setTargetPositionX(Constants.CAR_RIGHT_P2);
 				carRight.getSprite().setRotation(-10);
 			}else {
-				rightCarSpeed = -Constants.CAR_SPEED_SIDEWAYS;
+				rightCarSpeed = -carSpeedSideways;
 				moveRightCar = true;
 				carRight.setTargetPositionX(Constants.CAR_RIGHT_P1);
 				carRight.getSprite().setRotation(10);
@@ -770,7 +975,14 @@ public class GameScreen implements Screen, InputProcessor{
 	}
 	
 	private void loadTextures() {
-		instructions = new Texture("textures/instructions2.png");
+		stretchTexture = new Texture("textures/carbon-fiber2.jpg");
+		roadBg = new Texture("textures/bg.png");
+
+		switchSprite = new Sprite(new Texture("textures/switch.png"));
+		switchBackSprite = new Sprite(new Texture("textures/switch_back.png"));
+		warning = new Sprite(new Texture("textures/warning_icon4.png"));
+		instructions = new Texture("textures/instructions5.png");
+		toStartMessage = new Sprite(new Texture("textures/ready.png"));
 		solidLine = new Texture("textures/line.png");
 		spriteSolid = new Sprite(solidLine);
 		stripe = new Texture("textures/stripes.png");
@@ -782,8 +994,9 @@ public class GameScreen implements Screen, InputProcessor{
 	}
 	
 	private void initViewports() {
-		fitViewport = new FitViewport(1080,1920);
+		fitViewport = new FitViewport(1080, 1920);
 		stretchViewport = new StretchViewport(1080,1920);
+		screenViewport = new ScreenViewport();
 	}
 
 	@Override
@@ -803,28 +1016,51 @@ public class GameScreen implements Screen, InputProcessor{
 
 	@Override
 	public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-		if(showInstructions) {
-			showInstructions = false;
-			placeObstaclesLeft();
-			placeObstaclesRight();
+		Vector3 touchPos = new Vector3(screenX,screenY, 0);
+		fitViewport.getCamera().unproject(touchPos);
+
+		System.out.println("TouchPosi" + touchPos.x + ", " + touchPos.y);
+
+		if(showInstructions){
+			if(touchPos.x < Constants.HORIZONTAL_CENTRE && touchPos.y < 1200) {
+				showInstructions = false;
+				placeObstaclesLeft();
+				placeObstaclesRight();
+			}else if(touchPos.x > Constants.HORIZONTAL_CENTRE) {
+				showInstructions = false;
+				placeObstaclesLeft();
+				placeObstaclesRight();
+			}
 		}
 		
 		if(afterCircleHasBeenDrawn) {
-        	Game game = (Game) Gdx.app.getApplicationListener();
-        	game.setScreen(new GameScreen());
+			playCount++;
+			if(playCount > 3 && playCount % 5 == 0){
+				Timer.schedule(new Task(){
+								   @Override
+								   public void run() {
+								   	   handler.showInterstitial();
+								   }
+							   }
+						, 0.75f
+						, 0,
+						0
+				);
+			}else{
+				Game game = (Game) Gdx.app.getApplicationListener();
+				game.setScreen(new GameScreen(gsClient, handler));
+			}
+
 		}
 		if(currentState == GameState.RUNNING) {
-			Vector3 touchPos = new Vector3(screenX,screenY, 0);
-			stretchViewport.getCamera().unproject(touchPos);
-			
-			if(touchPos.y < 1800 && touchPos.x < Constants.HORIZONTAL_CENTRE && !moveLeftCar) {
+			if(touchPos.y < 1200 && touchPos.x < Constants.HORIZONTAL_CENTRE && !moveLeftCar) {
 				if(carLeft.getXPosition() == Constants.CAR_LEFT_P1) {
-					leftCarSpeed = Constants.CAR_SPEED_SIDEWAYS;
+					leftCarSpeed = carSpeedSideways;
 					moveLeftCar = true;
 					carLeft.setTargetPositionX(Constants.CAR_LEFT_P2);
 					carLeft.getSprite().setRotation(-10);
 				}else {
-					leftCarSpeed = -Constants.CAR_SPEED_SIDEWAYS;
+					leftCarSpeed = -carSpeedSideways;
 					moveLeftCar = true;
 					carLeft.setTargetPositionX(Constants.CAR_LEFT_P1);
 					carLeft.getSprite().setRotation(10);
@@ -833,12 +1069,12 @@ public class GameScreen implements Screen, InputProcessor{
 			
 			if(touchPos.x > Constants.HORIZONTAL_CENTRE && !moveRightCar) {
 				if(carRight.getXPosition() == Constants.CAR_RIGHT_P1) {
-					rightCarSpeed = Constants.CAR_SPEED_SIDEWAYS;
+					rightCarSpeed = carSpeedSideways;
 					moveRightCar = true;
 					carRight.setTargetPositionX(Constants.CAR_RIGHT_P2);
 					carRight.getSprite().setRotation(-10);
 				}else {
-					rightCarSpeed = -Constants.CAR_SPEED_SIDEWAYS;
+					rightCarSpeed = -carSpeedSideways;
 					moveRightCar = true;
 					carRight.setTargetPositionX(Constants.CAR_RIGHT_P1);
 					carRight.getSprite().setRotation(10);
@@ -864,7 +1100,7 @@ public class GameScreen implements Screen, InputProcessor{
 	}
 
 	@Override
-	public boolean scrolled(int amount) {
+	public boolean scrolled(float amountX, float amountY) {
 		return false;
 	}
 	
@@ -875,7 +1111,7 @@ public class GameScreen implements Screen, InputProcessor{
                 Timer.schedule(new Task(){
                     @Override
                     public void run() {
-							pause();
+						customPause();
                     }
                 }, 0.10f);
 
@@ -889,7 +1125,7 @@ public class GameScreen implements Screen, InputProcessor{
                 Timer.schedule(new Task(){
                     @Override
                     public void run() {
-							resume();
+						customResume();
                     }
                 }, 0.10f);
 
@@ -903,7 +1139,7 @@ public class GameScreen implements Screen, InputProcessor{
                 Timer.schedule(new Task(){
                     @Override
                     public void run() {
-                    	((Game)Gdx.app.getApplicationListener()).setScreen(new MenuScreen());
+                    	((Game)Gdx.app.getApplicationListener()).setScreen(new MenuScreen(gsClient, handler));
                     }
                 }, 0.10f);
 
