@@ -1,0 +1,283 @@
+
+twocars2.png
+format: RGBA8888
+filter: Nearest,Nearest
+repeat: none
+pause_window
+  rotate: false
+  xy: 1, 654
+  size: 692, 357
+  orig: 692, 357
+  offset: 0, 0
+  index: -1
+play_inv_up
+  rotate: false
+  xy: 695, 761
+  size: 250, 250
+  orig: 250, 250
+  offset: 0, 0
+  index: -1
+pause_up
+  rotate: false
+  xy: 947, 941
+  size: 70, 70
+  orig: 70, 70
+  offset: 0, 0
+  index: -1
+cover
+  rotate: false
+  xy: 1019, 1010
+  size: 1, 1
+  orig: 1, 1
+  offset: 0, 0
+  index: -1
+pause_down
+  rotate: false
+  xy: 947, 879
+  size: 60, 60
+  orig: 60, 60
+  offset: 0, 0
+  index: -1
+play_up
+  rotate: false
+  xy: 695, 509
+  size: 250, 250
+  orig: 250, 250
+  offset: 0, 0
+  index: -1
+twocars
+  rotate: false
+  xy: 1, 546
+  size: 479, 106
+  orig: 479, 106
+  offset: 0, 0
+  index: -1
+home_inv_up
+  rotate: false
+  xy: 482, 460
+  size: 192, 192
+  orig: 192, 192
+  offset: 0, 0
+  index: -1
+play_down
+  rotate: false
+  xy: 676, 294
+  size: 213, 213
+  orig: 213, 213
+  offset: 0, 0
+  index: -1
+achievements_down
+  rotate: false
+  xy: 891, 388
+  size: 119, 119
+  orig: 119, 119
+  offset: 0, 0
+  index: -1
+back_down
+  rotate: false
+  xy: 891, 267
+  size: 119, 119
+  orig: 119, 119
+  offset: 0, 0
+  index: -1
+play_inv_down
+  rotate: false
+  xy: 1, 331
+  size: 213, 213
+  orig: 213, 213
+  offset: 0, 0
+  index: -1
+home_up
+  rotate: false
+  xy: 216, 352
+  size: 192, 192
+  orig: 192, 192
+  offset: 0, 0
+  index: -1
+resume_up
+  rotate: false
+  xy: 410, 266
+  size: 192, 192
+  orig: 192, 192
+  offset: 0, 0
+  index: -1
+replay_tut_up
+  rotate: false
+  xy: 216, 160
+  size: 192, 190
+  orig: 192, 190
+  offset: 0, 0
+  index: -1
+home_down
+  rotate: false
+  xy: 1, 166
+  size: 163, 163
+  orig: 163, 163
+  offset: 0, 0
+  index: -1
+home_inv_down
+  rotate: false
+  xy: 1, 1
+  size: 163, 163
+  orig: 163, 163
+  offset: 0, 0
+  index: -1
+resume_down
+  rotate: false
+  xy: 604, 129
+  size: 163, 163
+  orig: 163, 163
+  offset: 0, 0
+  index: -1
+back_inv_down
+  rotate: false
+  xy: 769, 173
+  size: 119, 119
+  orig: 119, 119
+  offset: 0, 0
+  index: -1
+skip_up
+  rotate: false
+  xy: 890, 132
+  size: 133, 133
+  orig: 133, 133
+  offset: 0, 0
+  index: -1
+howtoplay_down
+  rotate: false
+  xy: 769, 52
+  size: 119, 119
+  orig: 119, 119
+  offset: 0, 0
+  index: -1
+leaderboard_down
+  rotate: false
+  xy: 890, 11
+  size: 119, 119
+  orig: 119, 119
+  offset: 0, 0
+  index: -1
+replay_tut_down
+  rotate: false
+  xy: 410, 102
+  size: 163, 162
+  orig: 163, 162
+  offset: 0, 0
+  index: -1
+moregames_down
+  rotate: false
+  xy: 575, 8
+  size: 119, 119
+  orig: 119, 119
+  offset: 0, 0
+  index: -1
+next_up
+  rotate: false
+  xy: 166, 3
+  size: 255, 97
+  orig: 255, 97
+  offset: 0, 0
+  index: -1
+
+twocars22.png
+format: RGBA8888
+filter: Nearest,Nearest
+repeat: none
+next_down
+  rotate: false
+  xy: 1, 427
+  size: 217, 82
+  orig: 217, 82
+  offset: 0, 0
+  index: -1
+achievements_up
+  rotate: false
+  xy: 1, 285
+  size: 140, 140
+  orig: 140, 140
+  offset: 0, 0
+  index: -1
+audio
+  rotate: false
+  xy: 1, 143
+  size: 140, 140
+  orig: 140, 140
+  offset: 0, 0
+  index: -1
+back_inv_up
+  rotate: false
+  xy: 1, 1
+  size: 140, 140
+  orig: 140, 140
+  offset: 0, 0
+  index: -1
+back_up
+  rotate: false
+  xy: 220, 369
+  size: 140, 140
+  orig: 140, 140
+  offset: 0, 0
+  index: -1
+howtoplay_up
+  rotate: false
+  xy: 362, 369
+  size: 140, 140
+  orig: 140, 140
+  offset: 0, 0
+  index: -1
+leaderboard_up
+  rotate: false
+  xy: 504, 369
+  size: 140, 140
+  orig: 140, 140
+  offset: 0, 0
+  index: -1
+moregames_up
+  rotate: false
+  xy: 646, 369
+  size: 140, 140
+  orig: 140, 140
+  offset: 0, 0
+  index: -1
+more_up
+  rotate: false
+  xy: 788, 369
+  size: 140, 140
+  orig: 140, 140
+  offset: 0, 0
+  index: -1
+music
+  rotate: false
+  xy: 143, 227
+  size: 140, 140
+  orig: 140, 140
+  offset: 0, 0
+  index: -1
+noaudio
+  rotate: false
+  xy: 143, 85
+  size: 140, 140
+  orig: 140, 140
+  offset: 0, 0
+  index: -1
+nomusic
+  rotate: false
+  xy: 285, 227
+  size: 140, 140
+  orig: 140, 140
+  offset: 0, 0
+  index: -1
+more_down
+  rotate: false
+  xy: 285, 106
+  size: 119, 119
+  orig: 119, 119
+  offset: 0, 0
+  index: -1
+skip_down
+  rotate: false
+  xy: 427, 254
+  size: 113, 113
+  orig: 113, 113
+  offset: 0, 0
+  index: -1
